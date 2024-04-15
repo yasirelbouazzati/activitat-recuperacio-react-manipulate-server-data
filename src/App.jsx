@@ -1,66 +1,38 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import {
+  actualizarListaAlumnos,
+  agregarAlumno,
+  actualizarAlumno,
+  eliminarAlumno,
+} from "./services/alumnosService";
 
 function App() {
-  let id = 2;
   const [alumnos, setAlumnos] = useState([]);
   const [nombre, setNombre] = useState("");
   const [edad, setEdad] = useState("");
 
   useEffect(() => {
-    actualizarListaAlumnos();
+    actualizarListaAlumnos(setAlumnos);
   }, []);
-
-  const actualizarListaAlumnos = () => {
-    fetch("http://localhost:6715/persons")
-      .then((response) => response.json())
-      .then((data) => {
-        setAlumnos(data);
-      });
-  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
     const alumnoExistente = alumnos.find((alumno) => alumno.nombre === nombre);
     if (alumnoExistente) {
-      fetch(`http://localhost:6715/persons/${alumnoExistente.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ...alumnoExistente, edad }),
-      })
-        .then(() => {
-          setNombre("");
-          setEdad("");
-          actualizarListaAlumnos();
-        })
-        .catch((error) => console.error("Error:", error));
+      actualizarAlumno(alumnoExistente, edad, setNombre, setEdad, setAlumnos);
     } else {
-      fetch("http://localhost:6715/persons", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      
-        body: JSON.stringify({ id, nombre, edad }),
-      })
-        .then((response) => response.json())
-        .then(() => {
-          setNombre("");
-          setEdad("");
-          actualizarListaAlumnos();
-        })
-        .catch((error) => console.error("Error:", error));
+      // Generar un nuevo id único
+      const nuevoId =
+        alumnos.length > 0
+          ? Math.max(...alumnos.map((alumno) => alumno.id)) + 1
+          : 1;
+      agregarAlumno(nuevoId, nombre, edad, setNombre, setEdad, setAlumnos);
     }
   };
 
   const handleDelete = (id) => {
-    fetch(`http://localhost:6715/persons/${id}`, {
-      method: "DELETE",
-    }).then(() => {
-      actualizarListaAlumnos();
-    });
+    eliminarAlumno(id, setAlumnos);
   };
 
   return (
